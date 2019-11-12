@@ -11,6 +11,9 @@ class CPU:
         self.pc = 0
         self.reg = [0] * 8
         self.fl = 0
+        self.HLT = 0b00000001
+        self.PRN = 0b01000111
+        self.LDI = 0b10000010
 
     def ram_read(self, MAR):
         value = self.ram[MAR]
@@ -78,14 +81,14 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
             
-            if IR == opcode.LDI.code:
+            if IR == self.LDI:
                 # Set the value of a register to an integer.
                 register_index = operand_a
                 self.reg[register_index] = operand_b
                 self.pc += 3
-            elif IR == opcode.NOP.code:
-                self.pc += 1
-            elif  IR == opcode.PRN.code:
+            # elif IR == OPCODES.NOP.code:
+            #     self.pc += 1
+            elif  IR == self.PRN:
                 # Print numeric value stored in the given register.
                 # Print to the console the decimal integer value that is stored in the given
                 # register.
@@ -93,7 +96,7 @@ class CPU:
                 value = int(self.reg[reg_index])
                 print(f'{value}')
                 self.pc += 2
-            elif IR == opcode.HLT.code:
+            elif IR == self.HLT:
                 halted = True
                 self.pc += 1
             else:
