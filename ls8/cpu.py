@@ -15,6 +15,10 @@ class CPU:
         self.PRN = 0b01000111
         self.LDI = 0b10000010
         self.MUL = 0b10100010
+        self.POP = 0b01000110
+        self.PUSH = 0b01000101
+        self.SP = 7
+        self.reg[self.SP] = 0xF4
 
     def ram_read(self, MAR):
         value = self.ram[MAR]
@@ -27,22 +31,6 @@ class CPU:
         """Load a program into memory."""
 
         address = 0
-
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
 
         if len(sys.argv) != 2:
             print("usage: ls8.py filename")
@@ -103,6 +91,7 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
             
+            
             if IR == self.LDI:
                 # Set the value of a register to an integer.
                 register_index = operand_a
@@ -124,6 +113,24 @@ class CPU:
             elif IR == self.HLT:
                 halted = True
                 self.pc += 1
+            elif IR == self.POP:
+                #pop
+                val = self.ram[self.reg[self.SP]]
+                reg_num = operand_a
+                self.reg[reg_num] = val
+
+                self.reg[self.SP] += 1
+
+                self.pc += 2
+
+            elif IR == self.PUSH:
+                #push
+                self.reg[self.SP] -= 1
+                reg_num = operand_a
+                reg_val = self.reg[reg_num]
+                self.ram[self.reg[self.SP]] = reg_val
+
+                self.pc += 2
             else:
                 print(f'Unknown instruction at index {self.pc}')
                 self.pc += 1
