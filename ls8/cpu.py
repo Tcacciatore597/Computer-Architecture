@@ -17,6 +17,9 @@ class CPU:
         self.MUL = 0b10100010
         self.POP = 0b01000110
         self.PUSH = 0b01000101
+        self.CALL = 0b01010000
+        self.RET = 0b00010001
+        self.ADD = 0b10100000
         self.SP = 7
         self.reg[self.SP] = 0xF4
 
@@ -55,7 +58,7 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
+        if op == self.ADD:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == self.MUL:
             self.reg[reg_a] *= self.reg[reg_b]
@@ -110,6 +113,9 @@ class CPU:
             elif IR == self.MUL:
                 self.alu(self.MUL, operand_a, operand_b)
                 self.pc += 3
+            elif IR == self.ADD:
+                self.alu(self.ADD, operand_a, operand_b)
+                self.pc += 3
             elif IR == self.HLT:
                 halted = True
                 self.pc += 1
@@ -122,7 +128,16 @@ class CPU:
                 self.reg[self.SP] += 1
 
                 self.pc += 2
+            elif IR == self.CALL:
+                return_address = self.pc + 2
+                self.reg[self.SP] -= 1
+                self.ram[self.reg[self.SP]] = return_address
 
+                reg_num = operand_a
+                self.pc = self.reg[reg_num]
+            elif IR == self.RET:
+                self.pc = self.ram[self.reg[self.SP]]
+                self.reg[self.SP] += 1
             elif IR == self.PUSH:
                 #push
                 self.reg[self.SP] -= 1
