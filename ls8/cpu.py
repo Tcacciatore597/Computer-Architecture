@@ -10,7 +10,7 @@ class CPU:
         self.ram = [0] * 256
         self.pc = 0
         self.reg = [0] * 8
-        self.fl = 0
+        self.flag = {}
         self.HLT = 0b00000001
         self.PRN = 0b01000111
         self.LDI = 0b10000010
@@ -20,6 +20,10 @@ class CPU:
         self.CALL = 0b01010000
         self.RET = 0b00010001
         self.ADD = 0b10100000
+        self.CMP = 0b10100111
+        self.JMP = 0b01010100
+        self.JEQ = 0b01010101
+        self.JNE = 0b01010110
         self.SP = 7
         self.reg[self.SP] = 0xF4
 
@@ -63,6 +67,19 @@ class CPU:
         elif op == self.MUL:
             self.reg[reg_a] *= self.reg[reg_b]
         #elif op == "SUB": etc
+        elif op == self.CMP:
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.flag['E'] = 1
+            else:
+                self.flag['E'] = 0
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.flag['G'] = 1
+            else:
+                self.flag['G'] = 0
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.flag['L'] = 1
+            else:
+                self.flag['L'] = 0
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -119,6 +136,9 @@ class CPU:
             elif IR == self.HLT:
                 halted = True
                 self.pc += 1
+            elif IR == self.CMP:
+                self.alu(self.CMP, operand_a, operand_b)
+                self.pc += 3
             elif IR == self.POP:
                 #pop
                 val = self.ram[self.reg[self.SP]]
@@ -138,6 +158,22 @@ class CPU:
             elif IR == self.RET:
                 self.pc = self.ram[self.reg[self.SP]]
                 self.reg[self.SP] += 1
+            elif IR == self.JMP:
+                reg_num = operand_a
+                self.pc = self.reg[reg_num]
+            elif IR == self.JEQ:
+                if self.flag['E'] == 1:
+                    #jump to address stored in given register
+                    reg_num = operand_a
+                    self.pc = self.reg[reg_num]
+                else:
+                    self.pc += 2
+            elif IR == self.JNE:
+                if self.flag['E'] == 0:
+                    reg_num = operand_a
+                    self.pc = self.reg[reg_num]
+                else:
+                    self.pc += 2
             elif IR == self.PUSH:
                 #push
                 self.reg[self.SP] -= 1
